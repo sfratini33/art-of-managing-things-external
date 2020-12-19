@@ -15,19 +15,19 @@ def clear():
         t.destroy()
         u.destroy()
     except:
-        print('No need to clear "progression" field')
+        print('No need to destroy "progression" field')
     
     try:
         s.destroy()
         v.destroy()
     except:
-        print('No need to clear "sum of progression" field')
+        print('No need to destroy "sum of progression" field')
     
     try:
         r.destroy()
         d.destroy()
     except:
-        print('No need to clear "nth term in progression" field')
+        print('No need to destroy "nth term in progression" field')
     
     q1.delete(0,tk.END)
     x.set(0)
