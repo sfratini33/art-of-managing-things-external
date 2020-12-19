@@ -11,27 +11,24 @@ def quit():
     root.destroy()
     
 def clear():
-    try:
-        t.delete('1.0',tk.END)
-    except:
-        print('No need to clear  t field')
-        
-    try:
-        s.delete('1.0', tk.END)
-    except:
-        print('No need to clear field')
+    t.destroy()
+    t1.destroy()
     
-    try:
-        r.delete('1.0', tk.END)
-    except:
-        print('No need to clear field')
+    s.destroy()
+    s1.destroy()
+    
+    r.destroy()
+    r1.destroy()
     
     q1.delete(0,tk.END)
     x.set(0)
+    
     q2.delete(0,tk.END)
     y.set(0)
+    
     q3.delete(0,tk.END)
     z.set(0)
+    
     a = []
 
 def aprog (x,y,z):
