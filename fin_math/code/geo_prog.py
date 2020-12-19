@@ -11,12 +11,24 @@ def quit():
     root.destroy()
     
 def clear():
-    t.destroy()
-    s.destroy()
-    r.destroy()
-    u.destroy()
-    v.destroy()
-    d.destroy()
+    try:
+        t.destroy()
+        u.destroy()
+    except:
+        print('No need to clear "progression" field')
+    
+    try:
+        s.destroy()
+        v.destroy()
+    except:
+        print('No need to clear "sum of progression" field')
+    
+    try:
+        r.destroy()
+        d.destroy()
+    except:
+        print('No need to clear "nth term in progression" field')
+    
     q1.delete(0,tk.END)
     x.set(0)
     q2.delete(0,tk.END)
