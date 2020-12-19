@@ -18,8 +18,11 @@ def clear():
     v.destroy()
     d.destroy()
     q1.delete(0,tk.END)
+    x.set(0)
     q2.delete(0,tk.END)
+    y.set(0)
     q3.delete(0,tk.END)
+    z.set(0)
     a = []
 
 def aprog (x,y,z):
