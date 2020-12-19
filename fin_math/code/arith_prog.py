@@ -11,14 +11,23 @@ def quit():
     root.destroy()
     
 def clear():
-    t.destroy()
-    t1.destroy()
+    try:
+        t.destroy()
+        t1.destroy()
+    except:
+        print('No need to destroy "progression" field')
     
-    s.destroy()
-    s1.destroy()
+    try:
+        s.destroy()
+        s1.destroy()
+    except:
+        print('No need to destroy "sum of progression" field')
     
-    r.destroy()
-    r1.destroy()
+    try:
+        r.destroy()
+        r1.destroy()
+    except:
+        print('No need to destroy "nth term in progression" field')
     
     q1.delete(0,tk.END)
     x.set(0)
