@@ -11,17 +11,32 @@ def quit():
     root.destroy()
     
 def clear():
-    t.delete('1.0', tk.END)
-    s.delete('1.0', tk.END)
-    r.delete('1.0', tk.END)
+    try:
+        t.delete('1.0',tk.END)
+    except:
+        print('No need to clear  t field')
+        
+    try:
+        s.delete('1.0', tk.END)
+    except:
+        print('No need to clear field')
+    
+    try:
+        r.delete('1.0', tk.END)
+    except:
+        print('No need to clear field')
+    
     q1.delete(0,tk.END)
+    x.set(0)
     q2.delete(0,tk.END)
+    y.set(0)
     q3.delete(0,tk.END)
+    z.set(0)
     a = []
 
 def aprog (x,y,z):
 # Function that computes the first n terms of an arithmetic progression and the sum of those terms
-    global a,t,s
+    global a,t,t1,s,s1
     start = x.get()
     step = y.get()
     n = z.get()
@@ -51,7 +66,8 @@ def aprog (x,y,z):
         w = 10*(w+1)
 
     # Create a text widget
-    tk.Label(root, text="The progression is :").grid(row=7, column=1,padx=3,pady=11)
+    t1= tk.Label(root, text="The progression is :")
+    t1.grid(row=7, column=1,padx=3,pady=11)
     t = tk.Text(root, height=7, width=w)
     t.grid(row=7,column=2,padx=3,sticky='w')
 
@@ -71,14 +87,15 @@ def aprog (x,y,z):
             t.insert(tk.END, str(round(x,3)))
 
     # Output sum of the progression
-    tk.Label(root, text="The sum of the progression is :").grid(row=8, column=1,padx=3,pady=11)
+    s1 = tk.Label(root, text="The sum of the progression is :")
+    s1.grid(row=8, column=1,padx=3,pady=11)
     s = tk.Text(root,height=1,width=w)
     s.insert(tk.END, str(sum))
     s.grid(row=8,column=2,padx=3,sticky='w')
 
 def nth_term (x,y,z):
 # Function that computes the nth term in an arithmetic progression
-    global r
+    global r,r1
     start = x.get()
     step = y.get()
     n = z.get()
@@ -87,7 +104,8 @@ def nth_term (x,y,z):
     n_term = start + (n-1)*step
 
     # Print nth term 
-    tk.Label(root, text="Term number %s in the progression:" %n).grid(row=6, column=1,padx=3,pady=11)
+    r1 = tk.Label(root, text="Term number %s in the progression:" %n)
+    r1.grid(row=6, column=1,padx=3,pady=11)
     r = tk.Text(root,height=1,width=11)
     r.insert(tk.END, str(n_term))
     r.grid(row=6,column=2,padx=3,sticky='w')
