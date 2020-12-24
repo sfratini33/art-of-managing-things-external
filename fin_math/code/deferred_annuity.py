@@ -17,8 +17,14 @@ def quit():
     root.destroy()
     
 def clear():
-    s.destroy()
-    t.destroy()
+    try:
+        s.destroy()
+    except:
+        print("No need to destroy attribute")
+    try:
+        t.destroy()
+    except:
+        print("No need to destroy attribute")
     q1.delete(0,tk.END)
     w.set(0)
     q2.delete(0,tk.END)
