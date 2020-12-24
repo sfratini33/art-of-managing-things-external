@@ -42,7 +42,7 @@ def compute_var(w,x,y,z,v):
     q = w.get()         # initial investment amount
     i = x.get()         # interest (per period)
     n = y.get()         # number of payouts
-    m = z.get()         # number of deferral periods
+    m = z.get() - 1     # number of deferral periods
     r = v.get()         # amount per payout
     
 # Determine which one of q or r has not be entered and compute the other
