@@ -162,7 +162,7 @@ q8.grid(row=10, column=2,padx=5,pady=3,sticky='w')
 
 # Control buttons
 
-button1 = tk.Button(root,text="Analyze refinancing interest rates",command=analyze).grid(row=13,column=1,padx=3,pady=7,sticky='nesw')
+button1 = tk.Button(root,text="Analyze refinancing interest rates \n Solution is put in file named breakeven_int.csv",command=analyze).grid(row=13,column=1,padx=3,pady=7,sticky='nesw')
 
 button4 = tk.Button(root,text='Clear', command=clear).grid(row=23,column=1,pady=5)
 
