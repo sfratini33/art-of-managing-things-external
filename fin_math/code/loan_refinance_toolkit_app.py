@@ -3,6 +3,14 @@ Loan Refinance Toolkit (standalone app).
 
 This file is extracted from `loan_refinance_toolkit.ipynb` so it can be packaged
 into a Windows executable (e.g., via PyInstaller).
+
+Keeping in sync: After you change the **first code cell** in `loan_refinance_toolkit.ipynb`,
+apply the same logic and labels here so the notebook and this script match. Saving only
+the ``.ipynb`` will leave this file with an older timestamp even when behavior matches.
+
+Intentional difference: breakeven CSV is written under ``app_dir()`` (next to this script
+when run as Python, next to the ``.exe`` when frozen). The notebook uses the notebook’s
+working directory for ``breakeven_int.csv``.
 """
 
 from __future__ import annotations
@@ -99,6 +107,7 @@ def main() -> None:
         "n0": tk.IntVar(value=0),
         "k": tk.IntVar(value=0),
         "cost": tk.DoubleVar(value=0.0),
+        "n_per_y": tk.IntVar(value=12),
     }
 
     # Single-scenario inputs
@@ -112,7 +121,6 @@ def main() -> None:
         "i_low": tk.DoubleVar(value=0.0),
         "step": tk.DoubleVar(value=0.00005),
         "n1": tk.IntVar(value=0),
-        "n_per_y": tk.IntVar(value=12),
     }
 
     def build_shared_inputs(parent: ttk.Frame, start_row: int = 0) -> int:
@@ -145,6 +153,13 @@ def main() -> None:
             row=rr, column=0, sticky="w", pady=2
         )
         ttk.Entry(frm, textvariable=shared["cost"]).grid(row=rr, column=1, sticky="ew", pady=2)
+        rr += 1
+
+        ttk.Label(
+            frm,
+            text="Number of periods per year (nominal annual % = this × i per period; e.g. 12, 4, 26):",
+        ).grid(row=rr, column=0, sticky="w", pady=2)
+        ttk.Entry(frm, textvariable=shared["n_per_y"]).grid(row=rr, column=1, sticky="ew", pady=2)
 
         return start_row + 1
 
@@ -260,12 +275,6 @@ def main() -> None:
     ttk.Entry(an_specific, textvariable=an["step"]).grid(row=rr, column=1, sticky="ew", pady=2)
     rr += 1
 
-    ttk.Label(an_specific, text="Payments per year (for nominal annual %):").grid(
-        row=rr, column=0, sticky="w", pady=2
-    )
-    ttk.Entry(an_specific, textvariable=an["n_per_y"]).grid(row=rr, column=1, sticky="ew", pady=2)
-    rr += 1
-
     an_out = tk.Text(analyzer_tab, height=18, width=98)
     an_out.grid(row=r2 + 2, column=0, sticky="w", pady=(10, 0))
     an_out.config(state="disabled")
@@ -280,13 +289,16 @@ def main() -> None:
         n1 = int(an["n1"].get())
         i_low = float(an["i_low"].get())
         step = float(an["step"].get())
-        n_per_y = int(an["n_per_y"].get())
+        n_per_y = int(shared["n_per_y"].get())
 
         if p0 <= 0:
             set_output(an_out, "Error: please enter a positive initial loan amount.")
             return
         if n0 <= 0 or n1 <= 0 or n_per_y <= 0:
-            set_output(an_out, "Error: please enter positive values for n₀, n₁, and payments/year.")
+            set_output(
+                an_out,
+                "Error: please enter positive values for n₀, n₁, and number of periods per year.",
+            )
             return
         if k < 0 or k > n0:
             set_output(an_out, "Error: completed periods (k) must be between 0 and n₀.")
@@ -375,9 +387,12 @@ def main() -> None:
     bottom.columnconfigure(1, weight=1)
 
     def clear_all() -> None:
-        for v in shared.values():
+        for kname, v in shared.items():
             try:
-                v.set(0)
+                if kname == "n_per_y":
+                    v.set(12)
+                else:
+                    v.set(0)
             except tk.TclError:
                 pass
         for v in single.values():
@@ -388,8 +403,6 @@ def main() -> None:
         for kname, v in an.items():
             if kname == "step":
                 v.set(0.00005)
-            elif kname == "n_per_y":
-                v.set(12)
             else:
                 v.set(0)
         set_output(single_out, "")
