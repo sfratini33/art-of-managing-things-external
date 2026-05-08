@@ -1,4 +1,4 @@
-﻿"""Bond Schedule Creator.
+"""Bond Schedule Creator.
 
 This is the canonical implementation used by the book examples in Section 6.
 
@@ -31,6 +31,7 @@ def money(x: float) -> str:
 
 
 def output_csv_path() -> str:
+    """Return the path where the bond schedule CSV will be saved."""
     # Prefer the script directory when running as a file; fall back to cwd (e.g., notebooks).
     try:
         here = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +41,7 @@ def output_csv_path() -> str:
 
 
 def bring_to_front(win: tk.Tk) -> None:
+    """Bring the window to the front temporarily (useful for Jupyter)."""
     win.lift()
     win.attributes("-topmost", True)
     win.after(250, lambda: win.attributes("-topmost", False))
@@ -47,6 +49,7 @@ def bring_to_front(win: tk.Tk) -> None:
 
 @dataclass
 class BondUI:
+    """Container for all UI elements and variables."""
     root: tk.Tk
     face: tk.DoubleVar
     periods: tk.DoubleVar
@@ -59,6 +62,14 @@ class BondUI:
 
 
 def parse_inputs(ui: BondUI) -> tuple[float, int, float, float] | None:
+    """Parse and validate user inputs from the UI.
+
+    Args:
+        ui: BondUI instance containing input fields.
+
+    Returns:
+        Tuple of (face, n, coupon_rate, yield_rate) if valid, None otherwise.
+    """
     try:
         face = float(ui.face.get())
         n = int(round(float(ui.periods.get())))
@@ -81,11 +92,42 @@ def parse_inputs(ui: BondUI) -> tuple[float, int, float, float] | None:
         messagebox.showerror("Invalid input", "Yield rate per period must be nonnegative.")
         return None
 
+    # Warn about potentially unrealistic values
+    if coupon_per_period > 0.5:
+        messagebox.showwarning(
+            "Unusual coupon rate",
+            f"Coupon rate of {coupon_per_period:.1%} per period seems very high. "
+            "Did you mean to enter a decimal (e.g., 0.05 for 5%)?",
+        )
+    if yld_per_period > 0.5:
+        messagebox.showwarning(
+            "Unusual yield rate",
+            f"Yield rate of {yld_per_period:.1%} per period seems very high. "
+            "Did you mean to enter a decimal (e.g., 0.05 for 5%)?",
+        )
+    if n > 500:
+        messagebox.showwarning(
+            "Unusual period count",
+            f"Number of periods ({n}) is very large. This may take a moment to compute.",
+        )
+
     return face, n, coupon_per_period, yld_per_period
 
 
 def purchase_price(face: float, n: int, coupon: float, yld: float) -> float:
-    """Standard bond price: PV(coupons) + PV(redemption). Handles yld == 0."""
+    """Calculate bond purchase price: PV(coupons) + PV(redemption).
+
+    Uses the standard bond pricing formula. Handles the special case where yield = 0.
+
+    Args:
+        face: Redemption value of the bond.
+        n: Number of payment periods.
+        coupon: Coupon payment per period.
+        yld: Yield (discount rate) per period.
+
+    Returns:
+        Purchase price (present value of bond).
+    """
     if yld == 0.0:
         return face + coupon * n
     g = (1.0 + yld) ** (-n)
@@ -94,6 +136,17 @@ def purchase_price(face: float, n: int, coupon: float, yld: float) -> float:
 
 
 def compute_schedule(ui: BondUI) -> None:
+    """Compute the bond amortization schedule and save to CSV.
+
+    Calculates period-by-period breakdown of:
+    - Coupon payments
+    - Interest on book value
+    - Book value adjustments
+    - Running book value
+
+    Args:
+        ui: BondUI instance containing input fields.
+    """
     parsed = parse_inputs(ui)
     if parsed is None:
         return
@@ -121,6 +174,49 @@ def compute_schedule(ui: BondUI) -> None:
             ibv[-1] = yr * bv[-2]
             adj[-1] = coupon - ibv[-1]
 
+    # Display schedule in message box
+    schedule_text = "Bond Amortization Schedule\n"
+    schedule_text += "=" * 80 + "\n"
+    schedule_text += f"{'Period':<8} {'Coupon':>15} {'Interest':>15} {'Adjustment':>15} {'Book Value':>15}\n"
+    schedule_text += "-" * 80 + "\n"
+    schedule_text += f"{'0':<8} {'-':>15} {'-':>15} {'-':>15} {money(bv[0]):>15}\n"
+
+    for k in range(1, n + 1):
+        schedule_text += (
+            f"{k:<8} {money(coupon):>15} {money(ibv[k]):>15} "
+            f"{money(adj[k]):>15} {money(bv[k]):>15}\n"
+        )
+
+    coupon_total = coupon * n
+    ibv_total = sum(ibv[1:])
+    adj_total = sum(adj[1:])
+    schedule_text += "-" * 80 + "\n"
+    schedule_text += (
+        f"{'Totals':<8} {money(coupon_total):>15} {money(ibv_total):>15} "
+        f"{money(adj_total):>15} {'-':>15}\n"
+    )
+
+    # Show in a scrollable text window
+    preview_window = tk.Toplevel(ui.root)
+    preview_window.title("Bond Schedule Preview")
+    preview_window.geometry("900x500")
+
+    text_widget = tk.Text(preview_window, wrap=tk.NONE, font=("Courier", 10))
+    text_widget.insert("1.0", schedule_text)
+    text_widget.config(state=tk.DISABLED)
+
+    scrollbar_y = tk.Scrollbar(preview_window, orient=tk.VERTICAL, command=text_widget.yview)
+    scrollbar_x = tk.Scrollbar(preview_window, orient=tk.HORIZONTAL, command=text_widget.xview)
+    text_widget.config(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+
+    text_widget.grid(row=0, column=0, sticky="nsew")
+    scrollbar_y.grid(row=0, column=1, sticky="ns")
+    scrollbar_x.grid(row=1, column=0, sticky="ew")
+
+    preview_window.grid_rowconfigure(0, weight=1)
+    preview_window.grid_columnconfigure(0, weight=1)
+
+    # Save to CSV
     out_path = output_csv_path()
     try:
         with open(out_path, "w", newline="") as f:
@@ -134,18 +230,16 @@ def compute_schedule(ui: BondUI) -> None:
             for k in range(1, n + 1):
                 writer.writerow([k, money(coupon), money(ibv[k]), money(adj[k]), money(bv[k])])
 
-            coupon_total = coupon * n
-            ibv_total = sum(ibv[1:])
-            adj_total = sum(adj[1:])
             writer.writerow(["Totals", money(coupon_total), money(ibv_total), money(adj_total), "-"])
     except OSError as exc:
         messagebox.showerror("Could not write CSV", f"Failed to write:\n{out_path}\n\n{exc}")
         return
 
-    messagebox.showinfo("Wrote schedule", f"Bond schedule written to:\n{out_path}")
+    messagebox.showinfo("Success", f"Bond schedule written to:\n{out_path}")
 
 
 def clear_fields(ui: BondUI) -> None:
+    """Clear all input fields and reset variables to zero."""
     ui.face_entry.delete(0, tk.END)
     ui.periods_entry.delete(0, tk.END)
     ui.coupon_entry.delete(0, tk.END)
@@ -157,6 +251,7 @@ def clear_fields(ui: BondUI) -> None:
 
 
 def build_ui() -> BondUI:
+    """Build and return the GUI components."""
     root = tk.Tk()
     root.title("Bond Schedule Creator")
     bring_to_front(root)
@@ -206,13 +301,14 @@ def build_ui() -> BondUI:
     tk.Button(root, text="Compute bond schedule", command=lambda: compute_schedule(ui)).grid(
         row=8, column=1, padx=3, pady=7
     )
-    tk.Button(root, text="Clear", command=lambda: clear_fields(ui)).grid(row=23, column=1, pady=5)
-    tk.Button(root, text="Quit", command=root.destroy).grid(row=23, column=2, padx=3, pady=5, sticky="w")
+    tk.Button(root, text="Clear", command=lambda: clear_fields(ui)).grid(row=9, column=1, pady=5)
+    tk.Button(root, text="Quit", command=root.destroy).grid(row=9, column=2, padx=3, pady=5, sticky="w")
 
     return ui
 
 
 def main() -> None:
+    """Launch the Bond Schedule Creator GUI."""
     ui = build_ui()
     ui.root.mainloop()
 
