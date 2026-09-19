@@ -11,12 +11,13 @@ from .io_data import Sample
 
 
 def skewness(values: np.ndarray) -> float:
-    return float(stats.skew(values, bias=False))
+    # m3 / s^3 with central moments divided by n, the sample skewness of Section 4.2.3.
+    return float(stats.skew(values, bias=True))
 
 
 def kurtosis(values: np.ndarray) -> float:
-    # Pearson kurtosis: 3 for a normal distribution, as in Section 4.2.3 / 4.6.
-    return float(stats.kurtosis(values, fisher=False, bias=False))
+    # m4 / s^4 with central moments divided by n, as in Section 4.2.3; 3 for a normal distribution.
+    return float(stats.kurtosis(values, fisher=False, bias=True))
 
 
 def normality_check(sample: Sample) -> str:

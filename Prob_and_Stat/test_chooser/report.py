@@ -94,14 +94,14 @@ def format_report(result: TestResult, spec: StudySpec) -> str:
             if inside:
                 lines.append(
                     "The hypothesized value lies inside the interval, which agrees with not rejecting H0 "
-                    "in a two-sided test at this α (Section 4.6.7)."
+                    "in a two-sided test at this α (Section 4.6.8)."
                     if not result.reject
                     else "Check the numbers: a two-sided test and the matching CI should agree about H0."
                 )
             else:
                 lines.append(
                     "The hypothesized value lies outside the interval, which agrees with rejecting H0 "
-                    "in a two-sided test at this α (Section 4.6.7)."
+                    "in a two-sided test at this α (Section 4.6.8)."
                     if result.reject
                     else "Check the numbers: a two-sided test and the matching CI should agree about H0."
                 )
@@ -109,7 +109,7 @@ def format_report(result: TestResult, spec: StudySpec) -> str:
             lines.append(
                 "The test itself is one-sided. The interval above is the ordinary two-sided interval "
                 "for the same data; the exact match to a one-sided test is a one-sided bound "
-                "(Section 4.6.7)."
+                "(Section 4.6.8)."
             )
     if result.notes:
         lines.append("")

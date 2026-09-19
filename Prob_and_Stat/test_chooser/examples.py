@@ -29,18 +29,23 @@ PING_PONG = [
 ]
 
 
-def write_example_files(directory: Path | None = None) -> Path:
+def write_example_files(directory: Path | None = None, overwrite: bool = False) -> Path:
+    """Write the bundled example files if they are missing. Existing files are left alone."""
     directory = Path(directory) if directory else EXAMPLES_DIR
     directory.mkdir(parents=True, exist_ok=True)
-    with (directory / "batteries.csv").open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.writer(fh)
-        writer.writerow(["TypeX", "TypeY"])
-        writer.writerows(zip(BATTERY_X, BATTERY_Y))
-    with (directory / "ping_pong.csv").open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.writer(fh)
-        writer.writerow(["blue_count"])
-        for value in PING_PONG:
-            writer.writerow([value])
+    battery_file = directory / "batteries.csv"
+    if overwrite or not battery_file.exists():
+        with battery_file.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.writer(fh, lineterminator="\n")
+            writer.writerow(["TypeX", "TypeY"])
+            writer.writerows(zip(BATTERY_X, BATTERY_Y))
+    ping_file = directory / "ping_pong.csv"
+    if overwrite or not ping_file.exists():
+        with ping_file.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.writer(fh, lineterminator="\n")
+            writer.writerow(["blue_count"])
+            for value in PING_PONG:
+                writer.writerow([value])
     return directory
 
 
@@ -75,20 +80,20 @@ def material_spec(use_z: bool = True) -> StudySpec:
         alternative="greater",
         hypothesized=25.0,
         alpha=0.05,
-        designed_experiment=True,
+        designed_experiment=False,
         large_sample_z=use_z,
         sample_a_name="strength",
     )
 
 
-def proportion_spec() -> StudySpec:
+def proportion_spec(all_samples: bool = False) -> StudySpec:
     return StudySpec(
         parameter="one_proportion",
         alternative="two-sided",
         hypothesized=0.5,
         alpha=0.05,
-        designed_experiment=True,
-        sample_a_name="one sample of 100",
+        designed_experiment=False,
+        sample_a_name="all twenty samples" if all_samples else "first sample of Table 21",
     )
 
 
@@ -110,7 +115,11 @@ def material_report(use_z: bool = True) -> str:
     return format_report(run_test(spec, a), spec)
 
 
-def proportion_report() -> str:
-    spec = proportion_spec()
-    a = sample_from_summary("one sample of 100", n=100, successes=47)
+def proportion_report(all_samples: bool = False) -> str:
+    """One-sample proportion test: the first sample of Table 21 (47 of 100), or all twenty (938 of 2000)."""
+    spec = proportion_spec(all_samples)
+    if all_samples:
+        a = sample_from_summary(spec.sample_a_name, n=100 * len(PING_PONG), successes=sum(PING_PONG))
+    else:
+        a = sample_from_summary(spec.sample_a_name, n=100, successes=PING_PONG[0])
     return format_report(run_test(spec, a), spec)

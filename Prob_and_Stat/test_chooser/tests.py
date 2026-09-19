@@ -128,6 +128,12 @@ def _reject(pvalue: float, alpha: float) -> bool:
 
 
 def _design_note(spec: StudySpec) -> str:
+    if spec.parameter in {"one_mean", "one_proportion"}:
+        return (
+            "This is a one-sample test. No treatments or groups are compared, so the design question "
+            "does not affect the conclusion here. The conclusion concerns the population or process "
+            "the sample came from, and it holds only as far as the sample was drawn at random from it."
+        )
     if spec.designed_experiment:
         return (
             "You recorded that the treatments were assigned by the investigator. "
@@ -294,6 +300,11 @@ def _one_sample_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str)
         sigma_note = "The population standard deviation was supplied."
     else:
         _need_sd(a, "A large-sample z-test")
+        if n <= 30:
+            raise ValueError(
+                f"The large-sample z approximation is for n > 30, and this sample has n = {n}. "
+                "Untick that box to use the one-sample t-test, which is the default when σ is unknown."
+            )
         sigma = a.sd
         sigma_label = "s"
         sigma_note = (
@@ -341,7 +352,11 @@ def _one_sample_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str)
                 "Either the population is normal with known σ, or n is large enough for a normal approximation.",
                 normality_check(a) if a.has_raw() else sigma_note,
             ),
-            AssumptionLine("Scale of the SE", sigma_note, f"SE = {sigma_label}/√n = {se:.6g}."),
+            AssumptionLine(
+                "Standard error",
+                "The standard error of the mean is " + ("σ/√n with the supplied σ." if spec.sigma_known else "s/√n, with s standing in for σ."),
+                f"SE = {sigma_label}/√n = {se:.6g}.",
+            ),
         ],
         notes=[],
     )
@@ -371,7 +386,12 @@ def _two_sample_t(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str)
             m1, s1, n1, m2 + d, s2, n2, equal_var=equal_var, alternative=spec.alternative
         )
         t_stat, pvalue = float(res.statistic), float(res.pvalue)
-        df = float(res.df)
+        # ttest_ind_from_stats does not return the degrees of freedom, so compute them here.
+        if equal_var:
+            df = float(n1 + n2 - 2)
+        else:
+            v1, v2 = s1 ** 2 / n1, s2 ** 2 / n2
+            df = float((v1 + v2) ** 2 / (v1 ** 2 / (n1 - 1) + v2 ** 2 / (n2 - 1)))
         se_diff = np.sqrt(s1 ** 2 / n1 + s2 ** 2 / n2) if not equal_var else None
         if equal_var:
             sp2 = ((n1 - 1) * s1 ** 2 + (n2 - 1) * s2 ** 2) / (n1 + n2 - 2)
@@ -521,7 +541,7 @@ def _one_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
             notes=[
                 "The program did not run the z-test. "
                 + check0
-                + " Both products should be at least 10 before the normal approximation of Section 4.5.3 is used."
+                + " Both products should be at least 10 before the normal approximation of Section 4.5.2.3 is used."
             ],
             refused=True,
         )

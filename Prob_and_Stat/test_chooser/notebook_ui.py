@@ -117,7 +117,7 @@ def show_chooser():
     status = W.HTML()
     out = W.Output()
 
-    two_box = W.VBox([paired, equal_var, name_b])
+    two_box = W.VBox([paired, equal_var])
     mean_box = W.VBox([sigma_known, sigma, large_z])
     summary_a = W.HBox([n_a, mean_a, sd_a, succ_a])
     summary_b = W.HBox([n_b, mean_b, sd_b, succ_b])
