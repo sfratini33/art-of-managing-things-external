@@ -128,12 +128,6 @@ def _reject(pvalue: float, alpha: float) -> bool:
 
 
 def _design_note(spec: StudySpec) -> str:
-    if spec.parameter in {"one_mean", "one_proportion"}:
-        return (
-            "This is a one-sample test. No treatments or groups are compared, so the design question "
-            "does not affect the conclusion here. The conclusion concerns the population or process "
-            "the sample came from, and it holds only as far as the sample was drawn at random from it."
-        )
     if spec.designed_experiment:
         return (
             "You recorded that the treatments were assigned by the investigator. "
@@ -516,7 +510,7 @@ def _one_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
     p0 = spec.hypothesized
     phat = count / n
     ok0, check0 = proportion_conditions(n, p0, "Under H0")
-    okh, checkh = proportion_conditions(n, phat, "Using p̂")
+    okh, checkh = proportion_conditions(n, phat, "Using p̃")
     if not ok0:
         return TestResult(
             test_id=test_id,
@@ -536,7 +530,7 @@ def _one_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
             ci_high=None,
             ci_level=1 - spec.alpha,
             formula_lines=[],
-            sample_summaries=[f"{a.name}: {count} successes in {n} trials, p̂ = {phat:.6g}"],
+            sample_summaries=[f"{a.name}: {count} successes in {n} trials, p̃ = {phat:.6g}"],
             assumptions=[],
             notes=[
                 "The program did not run the z-test. "
@@ -572,10 +566,10 @@ def _one_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
         ci_high=float(ci_high),
         ci_level=1 - spec.alpha,
         formula_lines=[
-            f"p̂ = {count}/{n} = {phat:.6g}",
-            f"z = (p̂ − p0) / √(p0(1-p0)/n) = ({phat:.6g} − {p0:g}) / {se0:.6g} = {zstat:.6g}",
+            f"p̃ = {count}/{n} = {phat:.6g}",
+            f"z = (p̃ − p0) / √(p0(1-p0)/n) = ({phat:.6g} − {p0:g}) / {se0:.6g} = {zstat:.6g}",
         ],
-        sample_summaries=[f"{a.name}: {count} successes in {n} trials, p̂ = {phat:.6g}"],
+        sample_summaries=[f"{a.name}: {count} successes in {n} trials, p̃ = {phat:.6g}"],
         assumptions=[
             AssumptionLine(
                 "Normal approximation",
@@ -639,7 +633,7 @@ def _two_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
             ],
             assumptions=[],
             notes=[
-                "The program did not run the z-test. Both samples need n p̂ and n(1-p̂) at least 10 "
+                "The program did not run the z-test. Both samples need n p̃ and n(1-p̃) at least 10 "
                 "under the pooled estimate. " + t1 + " " + t2
             ],
             refused=True,
@@ -670,8 +664,8 @@ def _two_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
         ci_high=float(ci_high),
         ci_level=1 - spec.alpha,
         formula_lines=[
-            f"p̂1 = {c1}/{n1} = {p1:.6g},   p̂2 = {c2}/{n2} = {p2:.6g},   p̂ = {pooled:.6g}",
-            f"z = (p̂1 − p̂2) / √(p̂(1-p̂)(1/n1 + 1/n2)) = {zstat:.6g}",
+            f"p̃1 = {c1}/{n1} = {p1:.6g},   p̃2 = {c2}/{n2} = {p2:.6g},   p̃ = {pooled:.6g}",
+            f"z = (p̃1 − p̃2) / √(p̃(1-p̃)(1/n1 + 1/n2)) = {zstat:.6g}",
         ],
         sample_summaries=[
             f"{a.name}: {c1} successes in {n1} trials",
@@ -680,7 +674,7 @@ def _two_prop_z(spec: StudySpec, a: Sample, b: Optional[Sample], test_id: str) -
         assumptions=[
             AssumptionLine(
                 "Normal approximation",
-                "For each sample, n p̂ and n(1-p̂) are large enough, using the pooled p̂ under H0.",
+                "For each sample, n p̃ and n(1-p̃) are large enough, using the pooled p̃ under H0.",
                 t1 + " " + t2,
             ),
             AssumptionLine(
